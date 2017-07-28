@@ -21,7 +21,6 @@ require 'matrix'
 require 'extendmatrix'
 require 'distribution'
 require 'dirty-memoize'
-require 'reportbuilder'
 require 'daru'
 require 'statsample/daru'
 
