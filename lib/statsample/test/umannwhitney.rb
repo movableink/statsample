@@ -5,29 +5,29 @@ module Statsample
     #
     # Non-parametric test for assessing whether two independent samples
     # of observations come from the same distribution.
-    # 
+    #
     # == Assumptions
     #
     # * The two samples under investigation in the test are independent of each other and the observations within each sample are independent.
     # * The observations are comparable (i.e., for any two observations, one can assess whether they are equal or, if not, which one is greater).
     # * The variances in the two groups are approximately equal.
     #
-    # Higher differences of distributions correspond to 
+    # Higher differences of distributions correspond to
     # to lower values of U.
     #
     class UMannWhitney
       # Max for m*n allowed for exact calculation of probability
       MAX_MN_EXACT=10000
-      
+
       # U sampling distribution, based on Dinneen & Blakesley (1973) algorithm.
       # This is the algorithm used on SPSS.
-      # 
+      #
       # Parameters:
       # * <tt>n1</tt>: group 1 size
-      # * <tt>n2</tt>: group 2 size 
-      # == Reference: 
+      # * <tt>n2</tt>: group 2 size
+      # == Reference:
       # * Dinneen, L., & Blakesley, B. (1973). Algorithm AS 62: A Generator for the Sampling Distribution of the Mann- Whitney U Statistic. <em>Journal of the Royal Statistical Society, 22</em>(2), 269-273
-      # 
+      #
       def self.u_sampling_distribution_as62(n1,n2)
 
         freq=[]
@@ -57,7 +57,7 @@ module Statsample
             freq[n1]=sum
           end
         end
-        
+
         # Generate percentages for normal U
         dist=(1+max_u/2).to_i
         freq.shift
@@ -71,14 +71,14 @@ module Statsample
           ues.quo(total)
         }
       end
-      
-      # Generate distribution for permutations. 
+
+      # Generate distribution for permutations.
       # Very expensive, but useful for demostrations
-      
+
       def self.distribution_permutations(n1,n2)
         base=[0]*n1+[1]*n2
         po=Statsample::Permutation.new(base)
-        
+
         total=n1*n2
         req={}
         po.each do |perm|
@@ -104,7 +104,7 @@ module Statsample
       attr_reader :u1
       # Sample 2 U (useful for demostration)
       attr_reader :u2
-      # U Value 
+      # U Value
       attr_reader :u
       # Value of compensation for ties (useful for demostration)
       attr_reader :t
@@ -114,7 +114,7 @@ module Statsample
       #
       # Create a new U Mann-Whitney test
       # Params: Two Daru::Vectors
-      # 
+      #
       def initialize(v1,v2, opts=Hash.new)
         @v1      = v1
         @v2      = v2
@@ -126,13 +126,13 @@ module Statsample
         groups   = Daru::Vector.new(([0] * @n1) + ([1] * @n2))
         ds       = Daru::DataFrame.new({:g => groups, :data => data})
         @t       = nil
-        @ties    = data.to_a.size != data.to_a.uniq.size        
+        @ties    = data.to_a.size != data.to_a.uniq.size
         if @ties
           adjust_for_ties(ds[:data])
         end
-        ds[:ranked] = ds[:data].ranked      
+        ds[:ranked] = ds[:data].ranked
         @n = ds.nrows
-          
+
         @r1 = ds.filter_rows { |r| r[:g] == 0}[:ranked].sum
         @r2 = ((ds.nrows * (ds.nrows + 1)).quo(2)) - r1
         @u1 = r1 - ((@n1 * (@n1 + 1)).quo(2))
@@ -142,7 +142,7 @@ module Statsample
         @opts = opts_default.merge(opts)
         opts_default.keys.each {|k|
           send("#{k}=", @opts[k])
-        }       
+        }
       end
       def report_building(generator) # :nodoc:
         generator.section(:name=>@name) do |s|
@@ -167,22 +167,22 @@ module Statsample
         }
         sum
       end
-      # Adjunt for ties.
-      # 
-      # == Reference: 
+      # Adjust for ties.
+      #
+      # == Reference:
       # * http://europe.isixsigma.com/library/content/c080806a.asp
       def adjust_for_ties(data)
-        @t = data.frequencies.find_all { |k,v| v > 1 }.inject(0) { |a,v|
+        @t = data.frequencies.to_h.find_all { |k,v| v > 1 }.inject(0) { |a,v|
           a + (v[1]**3 - v[1]).quo(12)
-        }        
+        }
       end
-      
+
       private :adjust_for_ties
-      
+
       # Z value for U, with adjust for ties.
-      # For large samples, U is approximately normally distributed. 
+      # For large samples, U is approximately normally distributed.
       # In that case, you can use z to obtain probabily for U.
-      # == Reference: 
+      # == Reference:
       # * SPSS Manual
       def z
         mu=(@n1*@n2).quo(2)
@@ -203,6 +203,6 @@ module Statsample
         (1-Distribution::Normal.cdf(z.abs()))*2
       end
     end
-      
+
   end
 end
