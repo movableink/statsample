@@ -52,11 +52,15 @@ class Module
   end
 end
 
-class Array
-  def sum
-    inject(:+)
+unless Array.new.respond_to?(:sum)
+  class Array
+    def sum
+      inject(:+)
+    end
   end
+end
 
+class Array
   def mean
     sum.fdiv(size)
   end
@@ -133,7 +137,7 @@ module Statsample
       class_variable_get(cv)
     end
   end
-  
+
   create_has_library :gsl
 
   SPLIT_TOKEN = ','
